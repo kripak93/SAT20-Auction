@@ -13,7 +13,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 
     
     # Build the relative path to the CSV file
-file_path = os.path.join(current_dir, "'SA20_Auction.csv'")
+file_path = os.path.join(current_dir, "SA20_Auction.csv")
     
 
 # Load and preprocess data
