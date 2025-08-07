@@ -4,6 +4,8 @@ from dash import dcc, html, Input, Output
 import plotly.express as px
 import plotly.graph_objects as go
 from dash import dash_table
+import os
+import time
 
 
  # Get the current directory of the running script
