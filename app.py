@@ -6,11 +6,16 @@ import plotly.graph_objects as go
 from dash import dash_table
 
 
+ # Get the current directory of the running script
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
-Path = os.path.join(os.path.dirname(__file__), 'SA20_Auction.csv')
+    
+    # Build the relative path to the CSV file
+file_path = os.path.join(current_dir, "'SA20_Auction.csv'")
+    
 
 # Load and preprocess data
-df = pd.read_csv(Path)
+df = pd.read_csv(file_path)
 # Clean data
 df = df[df['Full Name'].notna()]  # Remove empty rows
 df = df[df['Winner'] != 'Unsold']  # Focus on sold players
@@ -65,6 +70,8 @@ total_spent['Purse Remaining'] = total_spent['Bidding Team'].map(team_purses) - 
 
 # Create Dash app
 app = dash.Dash(__name__)
+
+server = app.server
 
 app.layout = html.Div([
     html.H1("SA T20 Auction Valuation Dashboard", style={'textAlign': 'center'}),
