@@ -106,21 +106,25 @@ app.layout = html.Div([
     ]),
     
     html.Div([
-        dcc.Graph(id='player-valuation-heatmap')
-    ]),
-    
+    html.H2("Player Valuation Heatmap", style={'textAlign': 'center'}),
     html.Div([
         dcc.Dropdown(
-            id='metric-selector',
-            options=[
-                {'label': 'Total Bid Amount', 'value': 'sum'},
-                {'label': 'Number of Players', 'value': 'count'},
-                {'label': 'Average Bid', 'value': 'mean'}
-            ],
-            value='sum'
+            id='heatmap-set-selector',
+            options=[{'label': 'All Sets', 'value': 'All'}] + [{'label': s, 'value': s} for s in melted_df['Set'].unique()],
+            value='All',
+            clearable=False,
+            placeholder="Select a Set"
         ),
-        dcc.Graph(id='team-role-analysis')
-    ]),
+        dcc.Dropdown(
+            id='heatmap-role-selector',
+            options=[{'label': 'All Roles', 'value': 'All'}] + [{'label': r, 'value': r} for r in melted_df['Role'].unique()],
+            value='All',
+            clearable=False,
+            placeholder="Select a Role"
+        )
+    ], style={'display': 'flex', 'gap': '10px', 'marginBottom': '20px'}),
+    dcc.Graph(id='player-valuation-heatmap')
+]),
     
     html.Div([
         dcc.Graph(id='purse-utilization')
@@ -176,20 +180,40 @@ def update_role_spending(selected_role):
 
 @app.callback(
     Output('player-valuation-heatmap', 'figure'),
-    Input('team-selector', 'value')
+    Input('team-selector', 'value'),
+    Input('heatmap-set-selector', 'value'),  # New Input
+    Input('heatmap-role-selector', 'value') # New Input
 )
-def update_heatmap(selected_teams):
+def update_heatmap(selected_teams, selected_set, selected_role):
+    # Ensure selected_teams is a list for consistent filtering
     if not isinstance(selected_teams, list):
         selected_teams = [selected_teams]
     
-    heatmap_data = melted_df[melted_df['Bidding Team'].isin(selected_teams)]
-    heatmap_data = heatmap_data.pivot_table(index='Full Name', columns='Bidding Team', 
-                                          values='Bid Amount', aggfunc='sum')
+    # Start with all the relevant data
+    filtered_df = melted_df.copy()
     
-    fig = px.imshow(heatmap_data, 
-                   labels=dict(x="Team", y="Player", color="Bid Amount"),
-                   title="Player Valuation Heatmap",
-                   color_continuous_scale='Viridis')
+    # Apply filters based on user selections
+    if selected_teams:
+        filtered_df = filtered_df[filtered_df['Bidding Team'].isin(selected_teams)]
+    if selected_set != 'All':
+        filtered_df = filtered_df[filtered_df['Set'] == selected_set]
+    if selected_role != 'All':
+        filtered_df = filtered_df[filtered_df['Role'] == selected_role]
+    
+    # Create the pivot table for the heatmap
+    heatmap_data = filtered_df.pivot_table(
+        index='Full Name', 
+        columns='Bidding Team', 
+        values='Bid Amount', 
+        aggfunc='sum'
+    ).fillna(0) # Fill NaN with 0 for a cleaner heatmap
+    
+    fig = px.imshow(
+        heatmap_data, 
+        labels=dict(x="Team", y="Player", color="Bid Amount"),
+        title="Player Valuation Heatmap",
+        color_continuous_scale='Viridis'
+    )
     return fig
 
 @app.callback(
